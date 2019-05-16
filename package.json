@@ -1,0 +1,32 @@
+{
+    "name": "demo",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "start": "ts-node-dev src/index"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/stvvt/pcvt-graphql-talk.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/stvvt/pcvt-graphql-talk/issues"
+    },
+    "homepage": "https://github.com/stvvt/pcvt-graphql-talk#readme",
+    "devDependencies": {
+        "@types/express": "^4.16.1",
+        "@types/express-graphql": "^0.8.0",
+        "@types/graphql": "^14.2.0",
+        "ts-node-dev": "^1.0.0-pre.39",
+        "typescript": "^3.4.5"
+    },
+    "dependencies": {
+        "express": "^4.16.4",
+        "express-graphql": "^0.8.0",
+        "graphql": "^14.3.0"
+    }
+}
