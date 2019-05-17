@@ -1,26 +1,26 @@
-import express from 'express';
-import graphqlHTTP from 'express-graphql';
-import { buildSchema } from 'graphql';
+import { ApolloServer, gql } from 'apollo-server';
 import data from './data';
+import Orm from './orm';
 
-const app = express();
+const orm = new Orm(data);
 
-const schema = buildSchema(`
-    """Demo app root query fields"""
+const typeDefs = gql`
+    """ Demo app root query fields """
     type Query {
         """All users in database"""
         users: [User!]!
 
-        """All posts in database"""
+        """ All posts in database"""
         posts: [Post!]!
 
         """User by ID"""
         user("""User ID""" id: ID!): User!
 
         """Post by ID"""
-        post("""Post ID""" id: ID!): Post!
+        post(id: ID!): Post!
     }
 
+    """Represents an user of the app"""
     type User {
         id: ID!
         name: String!
@@ -28,50 +28,36 @@ const schema = buildSchema(`
         posts: [Post!]!
     }
 
+    """Represents a blog post"""
     type Post {
         id: ID!
         title: String!
         body: String!
         author: User
     }
-`);
+`;
 
-function getUserById(id) {
-    return data.users.find(user => user.id == id)
-}
+const users = orm.models.users;
+const posts = orm.models.posts;
 
-function getPostById(id) {
-    return data.posts.find(post => post.id == id)
-}
-
-data.users = data.users.map(user => {
-    return {
-        ...user,
-        posts: () => data.posts.filter(post => post.authorId == user.id)
-    }
-});
-
-data.posts = data.posts.map(post => {
-    return {
-        ...post,
-        author: () => {
-            console.log(getUserById(post.authorId));
-            return getUserById(post.authorId);
-        }
-    }
-});
-
-app.use(graphqlHTTP({
-    schema,
-    rootValue: {
-        users: data.users,
-        posts: data.posts,
-        post: ({ id }) => getPostById(id),
-        user: ({ id }) => getUserById(id),
+const resolvers = {
+    Query: {
+        users: () => users.all(),
+        posts: () => posts.all(),
+        user: (_, { id }) => users.find('id', id),
+        post: (_, { id }) => posts.find('id', id)
     },
-    graphiql: true
-}));
+    User: {
+        posts: (user) => posts.filter('authorId', user.id)
+    },
+    Post: {
+        author: (post) => users.find('id', post.authorId)
+    }
+};
 
-app.listen(3000, () => {
-    console.log('Server is listening on http://localhost:3000/graphql');
-})
+
+const server = new ApolloServer({ typeDefs, resolvers });
+
+server.listen().then(({ url }) => {
+    console.log(`🚀  Server ready at ${url}`);
+});
