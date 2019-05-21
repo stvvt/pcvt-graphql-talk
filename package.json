@@ -25,6 +25,7 @@
     },
     "dependencies": {
         "apollo-server": "^2.5.0",
+        "dataloader": "^1.4.0",
         "graphql": "^14.3.0",
         "puppeteer": "^1.16.0"
     }

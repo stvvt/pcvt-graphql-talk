@@ -1,6 +1,7 @@
 import { ApolloServer, gql } from 'apollo-server';
+import DataLoader from 'dataloader';
 import fs from 'fs';
-import puppeteer, { Browser } from 'puppeteer';
+import puppeteer from 'puppeteer';
 
 class Element {
     constructor(private page: puppeteer.Page, private elementHandle: puppeteer.ElementHandle) { }
@@ -19,8 +20,23 @@ class Element {
         return value;
     }
 
-    public async text() {
-        const value = await this.page.evaluate((element: HTMLElement) => element ? element.innerText : null, this.elementHandle);
+    public async text(all: boolean = true) {
+        const value = await this.page.evaluate((element: HTMLElement, all) => {
+            if (all) {
+                return element ? element.innerText : null;
+            }
+            const txt = [];
+            element.childNodes.forEach(node => {
+                if (node.nodeType === 3) {
+                    const nodeText = node.nodeValue.trim();
+                    if (nodeText !== '') {
+                        txt.push(nodeText);
+                    }
+                }
+            });
+
+            return txt.join(' ');
+        }, this.elementHandle, all);
         return value;
     }
 
@@ -34,9 +50,9 @@ class Element {
         return el.prop(name);
     }
 
-    public async textOf(selector?: string) {
+    public async textOf(selector?: string, all: boolean = true) {
         const el = selector ? await this.child(selector) : this;
-        return el.text();
+        return el.text(all);
     }
 
     public async countOf(itemSelector: string, selector?: string) {
@@ -58,7 +74,9 @@ class Element {
 }
 
 interface Context {
-    browser: () => Browser;
+    loaders: {
+        page: DataLoader<string, puppeteer.Page>
+    };
 }
 
 interface QueryResolvers {
@@ -69,7 +87,7 @@ interface QueryResolvers {
 interface ElementResolvers {
     attrOf: (element: Element, args: { selector?: string, name: string }, ctx: Context) => Promise<string>;
     propOf: (element: Element, args: { selector?: string, name: string }, ctx: Context) => Promise<string>;
-    textOf: (element: Element, args: { selector?: string }, ctx: Context) => Promise<string>;
+    textOf: (element: Element, args: { selector?: string, all?: boolean }, ctx: Context) => Promise<string>;
     countOf: (element: Element, args: { selector?: string, itemSelector: string }, ctx: Context) => Promise<number>;
     child: (element: Element, args: { selector: string }, ctx: Context) => Promise<Element>;
     children: (element: Element, args: { selector: string }, ctx: Context) => Promise<Element[]>;
@@ -81,40 +99,15 @@ interface Resolvers {
     Element: ElementResolvers;
 }
 
-const createdPages: puppeteer.Page[] = []
-
-async function createPage({browser}) {
-    const page: puppeteer.Page = await (await browser()).newPage();
-
-    page.on('console', msg => console.log('>>>', msg.text()));
-
-    await page.setRequestInterception(true);
-
-    page.on('request', (req) => {
-        if (req.resourceType() == 'stylesheet' || req.resourceType() == 'font' || req.resourceType() == 'image') {
-            req.abort();
-        }
-        else {
-            req.continue();
-        }
-    });
-
-    createdPages.push(page);
-
-    return page;
-}
-
 const resolvers: Resolvers = {
     Query: {
-        child: async (_, { url, selector }, ctx) => {
-            const page = await createPage(ctx);
-            await page.goto(url);
+        child: async (_, { url, selector }, { loaders }) => {
+            const page = await loaders.page.load(url);
             const documentHandle = await page.waitForSelector(selector);
             return new Element(page, documentHandle);
         },
-        children: async (_, { url, selector }, ctx) => {
-            const page = await createPage(ctx);
-            await page.goto(url);
+        children: async (_, { url, selector }, { loaders }) => {
+            const page = await loaders.page.load(url);
             await page.waitForSelector(selector);
             const documentHandles = await page.$$(selector);
             return documentHandles.map(documentHandle => new Element(page, documentHandle));
@@ -127,8 +120,8 @@ const resolvers: Resolvers = {
         propOf: async (element, { selector, name }) => {
             return element.propOf(name, selector);
         },
-        textOf: async (element, { selector }) => {
-            return element.textOf(selector);
+        textOf: async (element, { selector, all }) => {
+            return element.textOf(selector, all);
         },
         countOf: async (element, { selector, itemSelector }) => {
             return element.countOf(itemSelector, selector);
@@ -139,7 +132,7 @@ const resolvers: Resolvers = {
         children: async (element, { selector }) => {
             return element.children(selector);
         },
-        link: async (element, { selector, urlType, name, itemSelector }, ctx) => {
+        link: async (element, { selector, urlType, name, itemSelector }, { loaders }) => {
             let url: string;
 
             switch (urlType) {
@@ -154,9 +147,7 @@ const resolvers: Resolvers = {
                     break;
             }
 
-            const page = await createPage(ctx);
-
-            await page.goto(url);
+            const page = await loaders.page.load(url);
             const documentHandle = await page.waitForSelector(itemSelector);
             return new Element(page, documentHandle);
         }
@@ -176,19 +167,62 @@ function getBrowserFactory() {
     }
 }
 
+async function createBrowser() {
+    return puppeteer.launch({
+        headless: false
+    })
+}
+
+async function createPage(browser: puppeteer.Browser) {
+    const page: puppeteer.Page = await browser.newPage();
+
+    // page.on('console', msg => console.log('>>>', msg.text()));
+
+    await page.setRequestInterception(true);
+
+    page.on('request', (req) => {
+        if (req.resourceType() == 'stylesheet' || req.resourceType() == 'font' || req.resourceType() == 'image') {
+            req.abort();
+        }
+        else {
+            req.continue();
+        }
+    });
+
+    return page;
+}
+
 async function main() {
     const typeDefs = gql`${fs.readFileSync(__dirname + '/schema.graphql')}`;
-    const browserFactory = getBrowserFactory();
+    let browser: puppeteer.Browser;
+
     const server = new ApolloServer({
         typeDefs,
         resolvers: resolvers as any,
-        context: ({ res }) => {
+        context: async ({ res }) => {
+            const pageCacheMap = new Map<string, Promise<puppeteer.Page>>();
+
+            const loaders = {
+                page: new DataLoader<string, puppeteer.Page>(async (urls: string[]) => {
+                    browser = browser || await createBrowser();
+
+                    return Promise.all(urls.map(async (url) => {
+                        const page = await createPage(browser);
+                        await page.goto(url);
+                        return page;
+                    }));
+                }, {
+                        batch: false,
+                        cacheMap: pageCacheMap
+                    }),
+            };
             res.on('finish', () => {
-                createdPages.forEach((page, index) => {
-                    page.close().then(() => delete createdPages[index]);
+                pageCacheMap.forEach((page, key) => {
+                    page.then(page => page.close()).then(() => pageCacheMap.delete(key));
                 });
             });
-            return { browser: browserFactory };
+
+            return { loaders };
         }
     });
 

@@ -12,7 +12,7 @@ enum UrlType {
 type Element {
     attrOf(selector: String, name: String): String
     propOf(selector: String, name: String): String
-    textOf(selector: String): String
+    textOf(selector: String, all: Boolean = true): String
     countOf(selector: String, itemSelector: String!): Int
     child(selector: String!): Element
     children(selector: String!): [Element!]
