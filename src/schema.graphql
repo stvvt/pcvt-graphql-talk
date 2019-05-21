@@ -1,0 +1,20 @@
+type Query {
+    child(url: String!, selector: String = "html"): Element
+    children(url: String!, selector: String = "html"): [Element!]
+}
+
+enum UrlType {
+    Attr,
+    Prop,
+    Text
+}
+
+type Element {
+    attrOf(selector: String, name: String): String
+    propOf(selector: String, name: String): String
+    textOf(selector: String): String
+    countOf(selector: String, itemSelector: String!): Int
+    child(selector: String!): Element
+    children(selector: String!): [Element!]
+    link(selector: String, urlType: UrlType!, name: String, itemSelector: String = "html"): Element
+}

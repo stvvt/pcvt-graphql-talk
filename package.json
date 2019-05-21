@@ -19,11 +19,13 @@
     "homepage": "https://github.com/stvvt/pcvt-graphql-talk#readme",
     "devDependencies": {
         "@types/graphql": "^14.2.0",
+        "@types/puppeteer": "^1.12.4",
         "ts-node-dev": "^1.0.0-pre.39",
         "typescript": "^3.4.5"
     },
     "dependencies": {
         "apollo-server": "^2.5.0",
-        "graphql": "^14.3.0"
+        "graphql": "^14.3.0",
+        "puppeteer": "^1.16.0"
     }
 }
