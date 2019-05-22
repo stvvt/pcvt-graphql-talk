@@ -1,0 +1,43 @@
+query books_toscrape_com_categories {
+  categories: children(
+    url: "http://books.toscrape.com/"
+    selector: "div.side_categories > ul > li > ul > li"
+  ) {
+    name: textOf(selector: "a")
+    url: propOf(selector: "a", name: "href")
+  }
+}
+
+query books_toscrape_com_books($url: String!) {
+  books: children(url: $url, selector: "article.product_pod") {
+    url: propOf(selector: ".image_container a", name: "href")
+    details: link(
+      urlType: Prop
+      selector: ".image_container a"
+      name: "href"
+      itemSelector: ".page .page_inner"
+    ) {
+      description: textOf(selector: "#product_description + p")
+      categoryPath: children(selector: ".breadcrumb li + li + li a") {
+        url: propOf(name: "href")
+        label: textOf
+      }
+      gallery:children(selector:"#product_gallery .item img") {
+        url: propOf(name:"src")
+      }
+      availability:textOf(selector:".instock.availability")
+      properties: children(selector:".table.table-striped tr") {
+        name:textOf(selector:"th")
+        value:textOf(selector:"td")
+      }
+    }
+    title: attrOf(selector: ".image_container a img", name: "alt")
+    thumbUrl: propOf(selector: ".image_container a img", name: "src")
+    price: textOf(selector: ".product_price .price_color")
+    rating: attrOf(selector: ".star-rating", name: "class")
+    availability: textOf(selector: ".instock.availability")
+  }
+  nextPage: child(url:$url, selector: ".pager .next a") {
+    url:propOf(name:"href")
+  }
+}

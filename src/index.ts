@@ -63,13 +63,33 @@ class Element {
     }
 
     public async child(selector: string) {
-        const elementHandle = await this.elementHandle.$(selector);
+        let elementHandle;
+        for (let i = 0; i < 10; i++) {
+            elementHandle = await this.elementHandle.$(selector);
+            if (elementHandle) {
+                break;
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
         return new Element(this.page, elementHandle);
     }
 
     public async children(selector: string) {
-        const elementHandles = await this.elementHandle.$$(selector);
+        let elementHandles;
+        for (let i = 0; i < 10; i++) {
+            elementHandles = await this.elementHandle.$$(selector);
+            if (elementHandles.length > 0) {
+                break;
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
         return elementHandles.map(elementHandle => new Element(this.page, elementHandle));
+    }
+
+    public async eval(code: string) {
+        return this.page.evaluate(`(function () { ${code} })()`);
     }
 }
 
@@ -92,6 +112,7 @@ interface ElementResolvers {
     child: (element: Element, args: { selector: string }, ctx: Context) => Promise<Element>;
     children: (element: Element, args: { selector: string }, ctx: Context) => Promise<Element[]>;
     link: (element: Element, args: { selector: string, urlType: string, name: string, itemSelector: string }, ctx: Context) => Promise<Element>;
+    eval: (element: Element, args: { code: string }, ctx: Context) => Promise<any>;
 }
 
 interface Resolvers {
@@ -150,6 +171,9 @@ const resolvers: Resolvers = {
             const page = await loaders.page.load(url);
             const documentHandle = await page.waitForSelector(itemSelector);
             return new Element(page, documentHandle);
+        },
+        eval: async (element, { code }) => {
+            return element.eval(code);
         }
     }
 };

@@ -1,0 +1,122 @@
+query cars_bg_list($url: String!) {
+  offsers: children(
+    url: $url
+    selector: "table.tableListResults tr.odd, table.tableListResults tr.even"
+  ) {
+    url: propOf(selector: "td:first-child a", name: "href")
+    thumbnailUrl: propOf(selector: "td:first-child a img", name: "src")
+    timeAdded: textOf(selector: "td:nth-child(2) span")
+    title: textOf(selector: "td:nth-child(2) a")
+    subTitle: textOf(selector: "td:nth-child(2)", all: false)
+    descriptionExcerpt: textOf(selector: "td:nth-child(2) div")
+    year: textOf(selector: "td:nth-child(3) span")
+    price: textOf(selector: "td:nth-child(4) span strong")
+    currency: textOf(selector: "td:nth-child(4)", all: false)
+    supplier: child(selector: "td:nth-child(5)") {
+      name: textOf(selector: "a")
+      url: propOf(selector: "a", name: "href")
+      city: textOf(all: false)
+    }
+    details: link(
+      urlType: Prop
+      selector: "td:first-child a"
+      name: "href"
+      itemSelector: "body > table:nth-child(12) > tbody > tr:nth-child(1) > td > table:nth-child(4)"
+    ) {
+      car: child(selector: "tbody > tr > td:nth-child(1) > table") {
+        title: textOf(selector: "tr:nth-child(1)")
+        properties: child(
+          selector: "tr:nth-child(3) > td > table > tbody > tr"
+        ) {
+          year: textOf(
+            selector: "td:nth-child(1) tr:nth-child(1) td:nth-child(2)"
+          )
+          mileage: textOf(
+            selector: "td:nth-child(1) tr:nth-child(2) td:nth-child(2)"
+          )
+          fuel: textOf(
+            selector: "td:nth-child(1) tr:nth-child(3) td:nth-child(2)"
+          )
+          transmission: textOf(
+            selector: "td:nth-child(1) tr:nth-child(4) td:nth-child(2)"
+          )
+          power: textOf(
+            selector: "td:nth-child(2) tr:nth-child(1) td:nth-child(2)"
+          )
+          cc: textOf(
+            selector: "td:nth-child(2) tr:nth-child(2) td:nth-child(2)"
+          )
+          doors: textOf(
+            selector: "td:nth-child(2) tr:nth-child(3) td:nth-child(2)"
+          )
+          color: textOf(
+            selector: "td:nth-child(2) tr:nth-child(4) td:nth-child(2)"
+          )
+        }
+        extras: child(
+          selector: "tbody > tr:nth-child(4) > td > table > tbody"
+        ) {
+          comfort: textOf(selector: "tr:nth-child(3) > td:nth-child(2)")
+          security: textOf(selector: "tr:nth-child(4) > td:nth-child(2)")
+          others: textOf(selector: "tr:nth-child(5) > td:nth-child(2)")
+          eurostandard: textOf(selector: "tr:nth-child(6) > td:nth-child(2)")
+        }
+        additionalInfo: textOf(
+          selector: "tbody > tr:nth-child(5) > td > table > tbody > tr:nth-child(3) > td"
+        )
+      }
+      gallery: children(selector: "div.nImgDiv, div.selImgDiv") {
+        imageUrl: propOf(selector: "a.thickbox", name: "href")
+        thumbUrl: propOf(selector: "img", name: "src")
+      }
+    }
+  }
+}
+
+query cars_bg_offer($offerUrl: String!) {
+  offer: child(
+    url: $offerUrl
+    selector: "body > table:nth-child(12) > tbody > tr:nth-child(1) > td > table:nth-child(4)"
+  ) {
+    car: child(selector: "tbody > tr > td:nth-child(1) > table") {
+      title: textOf(selector: "tr:nth-child(1)")
+      properties: child(selector: "tr:nth-child(3) > td > table > tbody > tr") {
+        year: textOf(
+          selector: "td:nth-child(1) tr:nth-child(1) td:nth-child(2)"
+        )
+        mileage: textOf(
+          selector: "td:nth-child(1) tr:nth-child(2) td:nth-child(2)"
+        )
+        fuel: textOf(
+          selector: "td:nth-child(1) tr:nth-child(3) td:nth-child(2)"
+        )
+        transmission: textOf(
+          selector: "td:nth-child(1) tr:nth-child(4) td:nth-child(2)"
+        )
+        power: textOf(
+          selector: "td:nth-child(2) tr:nth-child(1) td:nth-child(2)"
+        )
+        cc: textOf(selector: "td:nth-child(2) tr:nth-child(2) td:nth-child(2)")
+        doors: textOf(
+          selector: "td:nth-child(2) tr:nth-child(3) td:nth-child(2)"
+        )
+        color: textOf(
+          selector: "td:nth-child(2) tr:nth-child(4) td:nth-child(2)"
+        )
+      }
+      extras: child(selector: "tbody > tr:nth-child(4) > td > table > tbody") {
+        comfort: textOf(selector: "tr:nth-child(3) > td:nth-child(2)")
+        security: textOf(selector: "tr:nth-child(4) > td:nth-child(2)")
+        others: textOf(selector: "tr:nth-child(5) > td:nth-child(2)")
+        eurostandard: textOf(selector: "tr:nth-child(6) > td:nth-child(2)")
+      }
+      additionalInfo: textOf(
+        selector: "tbody > tr:nth-child(5) > td > table > tbody > tr:nth-child(3) > td"
+      )
+    }
+    gallery: children(selector: "div.nImgDiv, div.selImgDiv") {
+      imageUrl: propOf(selector: "a.thickbox", name: "href")
+      thumbUrl: propOf(selector: "img", name: "src")
+    }
+  }
+}

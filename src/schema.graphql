@@ -17,4 +17,5 @@ type Element {
     child(selector: String!): Element
     children(selector: String!): [Element!]
     link(selector: String, urlType: UrlType!, name: String, itemSelector: String = "html"): Element
+    eval(code: String!): [String!]
 }
