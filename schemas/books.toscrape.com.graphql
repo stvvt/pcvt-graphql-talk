@@ -1,0 +1,60 @@
+enum UrlType {
+    Attr,
+    Prop,
+    Text
+}
+
+directive @textOf(selector: String, all: Boolean = true) on FIELD_DEFINITION
+directive @attrOf(selector: String, name: String!) on FIELD_DEFINITION
+directive @propOf(selector: String, name: String!) on FIELD_DEFINITION
+directive @child(selector: String) on FIELD_DEFINITION
+directive @children(selector: String) on FIELD_DEFINITION
+directive @link(urlType: UrlType!, selector: String!, name: String!, itemSelector: String = "html") on FIELD_DEFINITION
+
+type Category {
+    name: String @textOf(selector: "a")
+    url: String @propOf(selector: "a", name: "href")
+}
+
+type CategoryPathItem {
+    url: String @propOf(name: "href")
+    name: String @textOf
+}
+
+type GalleryItem {
+    url: String @propOf(name:"src")
+}
+
+type BookDetailsProperty {
+    name: String @textOf(selector:"th")
+    value: String @textOf(selector:"td")
+}
+
+type BookDetails {
+    description: String  @textOf(selector: "#product_description + p")
+    categoryPath: [CategoryPathItem!] @children(selector: ".breadcrumb li + li + li a")
+    gallery: [GalleryItem!] @children(selector:"#product_gallery .item img")
+    availability: String @textOf(selector:".instock.availability")
+    properties: [BookDetailsProperty!] @children(selector:".table.table-striped tr")
+}
+
+type Book {
+    url: String! @propOf(selector: ".image_container a", name: "href")
+    details: BookDetails @link(
+        urlType: Prop
+        selector: ".image_container a"
+        name: "href"
+        itemSelector: ".page .page_inner"
+    )
+    title: String @attrOf(selector: ".image_container a img", name: "alt")
+    thumbUrl: String @propOf(selector: ".image_container a img", name: "src")
+    price: String @textOf(selector: ".product_price .price_color")
+    rating: String @attrOf(selector: ".star-rating", name: "class")
+    availability: String @textOf(selector: ".instock.availability")
+}
+
+type Query {
+    categories(url: String!): [Category!] @children(selector: "div.side_categories > ul > li > ul > li")
+    books(url: String!): [Book!] @children(selector: "article.product_pod")
+    nextPage(url: String!): String @child(selector: ".pager .next a")
+}
