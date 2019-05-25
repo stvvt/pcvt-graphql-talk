@@ -89,7 +89,7 @@ class Element {
     }
 
     public async eval(code: string) {
-        return this.page.evaluate(`(function () { ${code} })()`);
+        return this.page.evaluate(`(function () { try { ${code} } catch (ex) { return [ex.toString()]; } })()`);
     }
 }
 
