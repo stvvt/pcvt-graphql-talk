@@ -10,6 +10,44 @@ query imot_bg_list($url: String!) {
       url: propOf(name: "href")
       logoUrl: propOf(selector: "img", name: "src")
     }
+    details: link(urlType: Prop, selector: "a.photoLink", name: "href") {
+      loadPricelog: eval(
+        code: "var a = document.querySelector('a[title=\"Виж промените в цената.\"]'); a && a.click(); return [];"
+      )
+      galleryThumbs: children(
+        selector: "form[name='search'] tbody > tr:nth-child(1) > td:nth-child(1) > div:nth-child(2) > table a img"
+      ) {
+        url: propOf(name: "src")
+      }
+      galleryUrls: eval(
+        code: "var i = document.createElement('img'); if (typeof picts === 'undefined') return []; return picts.map(url => (i.src = url, i.src));"
+      )
+      priceLog: children(selector: "#price_stats tr + tr") {
+        when: textOf(selector: "td:nth-child(1)")
+        delta: textOf(selector: "td:nth-child(2)")
+        price: textOf(selector: "td:nth-child(3)")
+      }
+      properties: children(
+        selector: "form[name='search'] table:nth-child(16) > tbody > tr:nth-child(1) > td:nth-child(3) > table:nth-child(6) tr"
+      ) {
+        label: textOf(selector: "td:nth-child(1)")
+        value: textOf(selector: "td:nth-child(2)")
+      }
+      description: textOf(selector: "#description_div")
+      agencyUrl: propOf(
+        selector: "body > div:nth-child(3) > table > tbody > tr:nth-child(1) > td:nth-child(1) > form:nth-child(3) > table:nth-child(19) > tbody > tr > td > div:nth-child(2) > a:nth-child(1)"
+        name: "href"
+      )
+      contactPhone: textOf(
+        selector: "body > div:nth-child(3) > table > tbody > tr:nth-child(1) > td:nth-child(1) > form:nth-child(3) > div:nth-child(23) > span > span"
+      )
+      contactName: textOf(
+        selector: "body > div:nth-child(3) > table > tbody > tr:nth-child(1) > td:nth-child(1) > form:nth-child(3) > table:nth-child(24) > tbody > tr > td:nth-child(2) > b"
+      )
+    }
+  }
+  nextPage:child(url:$url, selector:"body > div:nth-child(2) > table > tbody > tr:nth-child(1) > td:nth-child(1) > table:nth-child(8) > tbody > tr > td:nth-child(2) a:last-child") {
+    url: propOf(name:"href")
   }
 }
 
@@ -19,12 +57,9 @@ query imot_bg_offer($offerUrl: String!) {
       code: "var a = document.querySelector('a[title=\"Виж промените в цената.\"]'); a && a.click(); return [];"
     )
   }
-  offer: child(
-    url: $offerUrl
-    selector: "body > div:nth-child(3) > table > tbody > tr:nth-child(1) > td:nth-child(1) > form:nth-child(3) > table:nth-child(16)"
-  ) {
+  offer: child(url: $offerUrl) {
     galleryThumbs: children(
-      selector: "tbody > tr:nth-child(1) > td:nth-child(1) > div:nth-child(2) > table a img"
+      selector: "form[name='search'] tbody > tr:nth-child(1) > td:nth-child(1) > div:nth-child(2) > table a img"
     ) {
       url: propOf(name: "src")
     }
@@ -36,5 +71,22 @@ query imot_bg_offer($offerUrl: String!) {
       delta: textOf(selector: "td:nth-child(2)")
       price: textOf(selector: "td:nth-child(3)")
     }
+    properties: children(
+      selector: "form[name='search'] table:nth-child(16) > tbody > tr:nth-child(1) > td:nth-child(3) > table:nth-child(6) tr"
+    ) {
+      label: textOf(selector: "td:nth-child(1)")
+      value: textOf(selector: "td:nth-child(2)")
+    }
+    description: textOf(selector: "#description_div")
+    agencyUrl: propOf(
+      selector: "body > div:nth-child(3) > table > tbody > tr:nth-child(1) > td:nth-child(1) > form:nth-child(3) > table:nth-child(19) > tbody > tr > td > div:nth-child(2) > a:nth-child(1)"
+      name: "href"
+    )
+    contactPhone: textOf(
+      selector: "body > div:nth-child(3) > table > tbody > tr:nth-child(1) > td:nth-child(1) > form:nth-child(3) > div:nth-child(23) > span > span"
+    )
+    contactName: textOf(
+      selector: "body > div:nth-child(3) > table > tbody > tr:nth-child(1) > td:nth-child(1) > form:nth-child(3) > table:nth-child(24) > tbody > tr > td:nth-child(2) > b"
+    )
   }
 }
