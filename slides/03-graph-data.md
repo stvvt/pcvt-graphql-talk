@@ -5,7 +5,7 @@ Short answer: **EVERYTHING**
 
 ---
 
-#### Use case
+#### Example
 Star Wars Data Graph
 
 <img class="stretch" src="images/SWAPI-Graph.png" />
