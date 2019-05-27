@@ -19,7 +19,7 @@ const UserType = new GraphQLObjectType({
         },
         posts: {
             type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(PostType))),
-            resolve: (user) => getUserById(user.id)
+            resolve: (user) => getPostsByAuthorId(user.id)
         }
     })
 });
@@ -96,6 +96,10 @@ function getUserById(id) {
 
 function getPostById(id) {
     return data.posts.find(post => post.id == id)
+}
+
+function getPostsByAuthorId(authorId) {
+    return data.posts.filter(post => post.authorId == authorId);
 }
 
 app.use(graphqlHTTP({
