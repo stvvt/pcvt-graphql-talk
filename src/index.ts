@@ -1,40 +1,94 @@
 import express from 'express';
 import graphqlHTTP from 'express-graphql';
-import { buildSchema } from 'graphql';
+import { GraphQLID, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString } from 'graphql';
 import data from './data';
 
 const app = express();
 
-const schema = buildSchema(`
-    """Demo app root query fields"""
-    type Query {
-        """All users in database"""
-        users: [User!]!
+const UserType = new GraphQLObjectType({
+    name: 'User',
+    fields: () => ({
+        id: {
+            type: new GraphQLNonNull(GraphQLID)
+        },
+        name: {
+            type: new GraphQLNonNull(GraphQLString)
+        },
+        email: {
+            type: GraphQLString
+        },
+        posts: {
+            type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(PostType))),
+            resolve: (user) => getUserById(user.id)
+        }
+    })
+});
 
-        """All posts in database"""
-        posts: [Post!]!
-
-        """User by ID"""
-        user("""User ID""" id: ID!): User!
-
-        """Post by ID"""
-        post("""Post ID""" id: ID!): Post!
+const PostType = new GraphQLObjectType({
+    name: 'Post',
+    fields: {
+        id: {
+            type: new GraphQLNonNull(GraphQLID)
+        },
+        title: {
+            type: new GraphQLNonNull(GraphQLString)
+        },
+        body: {
+            type: GraphQLString
+        },
+        authorId: {
+            type: GraphQLID
+        },
+        author: {
+            type: UserType,
+            resolve: (post) => getUserById(post.authorId)
+        },
     }
+});
 
-    type User {
-        id: ID!
-        name: String!
-        email: String
-        posts: [Post!]!
-    }
+const QueryType = new GraphQLObjectType({
+    name: 'Query',
+    description: 'Demo app root query fields',
+    fields: {
+        users: {
+            description: 'All users in database',
+            type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(UserType))),
+            resolve: () => data.users
+        },
+        user: {
+            description: 'User by ID',
+            type: UserType,
+            args: {
+                id: {
+                    type: new GraphQLNonNull(GraphQLID),
+                    description: 'User ID'
+                }
+            },
+            resolve: (_, { id }) => getUserById(id)
+        },
+        posts: {
+            description: 'All posts in database',
+            type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(PostType))),
+            resolve: () => data.posts
+        },
+        post: {
+            description: 'Post by ID',
+            type: PostType,
+            args: {
+                id: {
+                    type: new GraphQLNonNull(GraphQLID),
+                    description: 'Post ID'
+                }
+            },
+            resolve: (_, { id }) => getPostById(id)
+        },
 
-    type Post {
-        id: ID!
-        title: String!
-        body: String!
-        author: User
     }
-`);
+})
+
+const schema = new GraphQLSchema({
+    query: QueryType
+});
 
 function getUserById(id) {
     return data.users.find(user => user.id == id)
@@ -44,31 +98,8 @@ function getPostById(id) {
     return data.posts.find(post => post.id == id)
 }
 
-data.users = data.users.map(user => {
-    return {
-        ...user,
-        posts: () => data.posts.filter(post => post.authorId == user.id)
-    }
-});
-
-data.posts = data.posts.map(post => {
-    return {
-        ...post,
-        author: () => {
-            console.log(getUserById(post.authorId));
-            return getUserById(post.authorId);
-        }
-    }
-});
-
 app.use(graphqlHTTP({
     schema,
-    rootValue: {
-        users: data.users,
-        posts: data.posts,
-        post: ({ id }) => getPostById(id),
-        user: ({ id }) => getUserById(id),
-    },
     graphiql: true
 }));
 
