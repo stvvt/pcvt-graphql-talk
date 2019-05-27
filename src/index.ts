@@ -1,39 +1,6 @@
 import { ApolloServer, gql } from 'apollo-server';
+import fs from 'fs';
 import data from './data';
-
-const typeDefs = gql`
-    """ Demo app root query fields """
-    type Query {
-        """All users in database"""
-        users: [User!]!
-
-        """ All posts in database"""
-        posts: [Post!]!
-
-        """User by ID"""
-        user("""User ID""" id: ID!): User!
-
-        """Post by ID"""
-        post(id: ID!): Post!
-    }
-
-    """Represents an user of the app"""
-    type User {
-        id: ID!
-        name: String!
-        email: String
-        posts: [Post!]!
-    }
-
-    """Represents a blog post"""
-    type Post {
-        id: ID!
-        title: String!
-        body: String!
-        authorId: String
-        author: User
-    }
-`;
 
 function getUserById(id) {
     return data.users.find(user => user.id == id)
@@ -47,6 +14,7 @@ function getPostsByAuthorId(authorId) {
     return data.posts.filter(post => post.authorId == authorId);
 }
 
+const typeDefs = gql`${fs.readFileSync(__dirname + '/schema.graphql')}`;
 const resolvers = {
     Query: {
         users: () => data.users,
