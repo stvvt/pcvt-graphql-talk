@@ -1,8 +1,5 @@
 import { ApolloServer, gql } from 'apollo-server';
 import data from './data';
-import Orm from './orm';
-
-const orm = new Orm(data);
 
 const typeDefs = gql`
     """ Demo app root query fields """
@@ -33,28 +30,37 @@ const typeDefs = gql`
         id: ID!
         title: String!
         body: String!
+        authorId: String
         author: User
     }
 `;
 
-const users = orm.models.users;
-const posts = orm.models.posts;
+function getUserById(id) {
+    return data.users.find(user => user.id == id)
+}
+
+function getPostById(id) {
+    return data.posts.find(post => post.id == id)
+}
+
+function getPostsByAuthorId(authorId) {
+    return data.posts.filter(post => post.authorId == authorId);
+}
 
 const resolvers = {
     Query: {
-        users: () => users.all(),
-        posts: () => posts.all(),
-        user: (_, { id }) => users.find('id', id),
-        post: (_, { id }) => posts.find('id', id)
+        users: () => data.users,
+        posts: () => data.posts,
+        user: (_, { id }) => getUserById(id),
+        post: (_, { id }) => getPostById(id),
     },
     User: {
-        posts: (user) => posts.filter('authorId', user.id)
+        posts: (user) => getPostsByAuthorId(user.id)
     },
     Post: {
-        author: (post) => users.find('id', post.authorId)
+        author: (post) => getUserById(post.authorId)
     }
 };
-
 
 const server = new ApolloServer({ typeDefs, resolvers });
 
