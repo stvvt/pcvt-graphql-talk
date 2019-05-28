@@ -2,6 +2,6 @@
 
 GraphQL-izing Sofia Public Transport API
 
-http://drone.sumc.bg/api
+https://sofiatraffic.bg/
 
-Documented at https://github.com/ivkos/Sofia-Public-Transport-API
+([illegally] reverse engineered and used)
