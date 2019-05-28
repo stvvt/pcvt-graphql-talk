@@ -1,31 +1,35 @@
-""" Demo app root query fields """
+""" Public Transport """
 type Query {
-    """All users in database"""
-    users: [User!]!
-
-    """ All posts in database"""
-    posts: [Post!]!
-
-    """User by ID"""
-    user("""User ID""" id: ID!): User!
-
-    """Post by ID"""
-    post(id: ID!): Post!
+    stop(code: String!): Stop
+    stops(nameFilter: String!): [Stop!]!
 }
 
-"""Represents an user of the app"""
-type User {
-    id: ID!
+"""A Bus Stop"""
+type Stop {
+    code: String!
     name: String!
-    email: String
-    posts: [Post!]!
+    latitude: Float
+    longitude: Float
+    lines: [Line!]!
 }
 
-"""Represents a blog post"""
-type Post {
-    id: ID!
-    title: String!
-    body: String!
-    authorId: String
-    author: User
+enum VehicleType {
+    bus
+    tram
+    trolley
 }
+
+type Line {
+    name: String
+    vehicle_type: VehicleType
+    direction: String
+    arrivals: [Arrival!]!
+}
+
+type Arrival {
+    time: String!
+    has_air_conditioning: Boolean,
+    has_wifi: Boolean,
+    is_wheelchair_accessible: Boolean
+}
+

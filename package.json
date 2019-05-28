@@ -4,7 +4,8 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "start": "ts-node-dev src/index"
+        "start": "ts-node-dev src/index",
+        "codegen": "graphql-codegen --config codegen.yml"
     },
     "repository": {
         "type": "git",
@@ -18,12 +19,19 @@
     },
     "homepage": "https://github.com/stvvt/pcvt-graphql-talk#readme",
     "devDependencies": {
+        "@graphql-codegen/cli": "^1.2.0",
+        "@graphql-codegen/typescript": "1.2.0",
+        "@graphql-codegen/typescript-resolvers": "^1.2.0",
+        "@types/got": "^9.4.4",
         "@types/graphql": "^14.2.0",
         "ts-node-dev": "^1.0.0-pre.39",
         "typescript": "^3.4.5"
     },
     "dependencies": {
         "apollo-server": "^2.5.0",
-        "graphql": "^14.3.0"
+        "got": "^9.6.0",
+        "graphql": "^14.3.0",
+        "keyv": "^3.1.0",
+        "keyv-file": "^0.1.13"
     }
 }

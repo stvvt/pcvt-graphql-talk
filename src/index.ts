@@ -1,32 +1,17 @@
 import { ApolloServer, gql } from 'apollo-server';
 import fs from 'fs';
-import data from './data';
+import { Resolvers } from './generated/graphql';
+import SofiaTrafficApi from './lib/sofiatrafficapi';
 
-function getUserById(id) {
-    return data.users.find(user => user.id == id)
-}
-
-function getPostById(id) {
-    return data.posts.find(post => post.id == id)
-}
-
-function getPostsByAuthorId(authorId) {
-    return data.posts.filter(post => post.authorId == authorId);
-}
+const api = new SofiaTrafficApi();
 
 const typeDefs = gql`${fs.readFileSync(__dirname + '/schema.graphql')}`;
-const resolvers = {
+const resolvers: Resolvers = {
     Query: {
-        users: () => data.users,
-        posts: () => data.posts,
-        user: (_, { id }) => getUserById(id),
-        post: (_, { id }) => getPostById(id),
+        stop: (_, { code }) => api.stop(code)
     },
-    User: {
-        posts: (user) => getPostsByAuthorId(user.id)
-    },
-    Post: {
-        author: (post) => getUserById(post.authorId)
+    Stop: {
+        lines: (stop) => api.lines(stop)
     }
 };
 
