@@ -3,8 +3,7 @@ import graphqlHTTP from 'express-graphql';
 import { GraphQLID, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString } from 'graphql';
 import data from './data';
 
-const app = express();
-
+// GraphQL related setup
 const UserType = new GraphQLObjectType({
     name: 'User',
     fields: () => ({
@@ -84,7 +83,7 @@ const QueryType = new GraphQLObjectType({
         },
 
     }
-})
+});
 
 const schema = new GraphQLSchema({
     query: QueryType
@@ -102,11 +101,18 @@ function getPostsByAuthorId(authorId) {
     return data.posts.filter(post => post.authorId == authorId);
 }
 
-app.use(graphqlHTTP({
-    schema,
-    graphiql: true
-}));
+// Express related setup
+const route = '/graphql'
+const port = process.env.PORT || 4000
 
-app.listen(3000, () => {
-    console.log('Server is listening on http://localhost:3000/graphql');
-})
+const app = express();
+
+app.listen(port, () => {
+    console.log(`Server is listening on http://localhost:${port}${route}`);
+});
+
+// Glue GraphQL and Express together
+app.use(route, graphqlHTTP({
+    schema,
+    graphiql: true,
+}));
