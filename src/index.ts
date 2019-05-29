@@ -2,6 +2,7 @@ import { ApolloServer, gql } from 'apollo-server';
 import fs from 'fs';
 import data from './data';
 
+// Data access layer
 function getUserById(id) {
     return data.users.find(user => user.id == id)
 }
@@ -14,6 +15,7 @@ function getPostsByAuthorId(authorId) {
     return data.posts.filter(post => post.authorId == authorId);
 }
 
+// GraphQL related setup
 const typeDefs = gql`${fs.readFileSync(__dirname + '/schema.graphql')}`;
 const resolvers = {
     Query: {
@@ -32,6 +34,7 @@ const resolvers = {
 
 const server = new ApolloServer({ typeDefs, resolvers });
 
-server.listen().then(({ url }) => {
-    console.log(`🚀  Server ready at ${url}`);
+const port = process.env.PORT || 4000;
+server.listen(port).then(({ url }) => {
+    console.log(`🚀 Server ready at ${url}`);
 });
