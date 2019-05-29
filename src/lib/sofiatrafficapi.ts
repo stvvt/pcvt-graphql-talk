@@ -46,6 +46,18 @@ export default class SofiaTraffic {
         return res;
     }
 
+    public async stops(nameFilter?: string) {
+        const { body }: { body: SofiaTraffic.Stop[] } = (await this.client.get(STOPS_URL));
+
+        const allStops = body.map(raw => ({ code: raw.c, name: raw.n, lines: [], latitude: raw.x, longitude: raw.y }));
+        if (nameFilter) {
+            const nameFilterRegex = new RegExp(`.*${nameFilter}.*`);
+            return allStops.filter(stop => stop.name.match(nameFilterRegex));
+        }
+
+        return allStops;
+    }
+
     public async lines(stop: Stop): Promise<Line[]> {
         const { body } = await this.client.get(`${ARRIVALS_URL}/${stop.code}/`);
         return body ? body.lines : [];

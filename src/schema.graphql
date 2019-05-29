@@ -1,7 +1,7 @@
 """ Public Transport """
 type Query {
     stop(code: String!): Stop
-    stops(nameFilter: String!): [Stop!]!
+    stops(nameFilter: String, skip: Int = 0, limit: Int = 10): [Stop!]!
 }
 
 """A Bus Stop"""

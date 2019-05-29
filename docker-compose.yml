@@ -1,0 +1,16 @@
+version: '2'
+
+services:
+
+    app:
+        image: node:11
+        working_dir: /app
+        environment:
+            - npm_config_cache=/tmp/npm-cache
+            - PORT
+        ports:
+            - "${PORT}:${PORT}"
+        command: npm start
+        user: "${UID}:${GID}"
+        volumes:
+            - .:/app

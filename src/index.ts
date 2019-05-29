@@ -8,7 +8,11 @@ const api = new SofiaTrafficApi();
 const typeDefs = gql`${fs.readFileSync(__dirname + '/schema.graphql')}`;
 const resolvers: Resolvers = {
     Query: {
-        stop: (_, { code }) => api.stop(code)
+        stop: (_, { code }) => api.stop(code),
+        stops: async (_, { nameFilter, limit, skip }) => {
+            const matching = await api.stops(nameFilter);
+            return matching.slice(skip, skip + limit);
+        }
     },
     Stop: {
         lines: (stop) => api.lines(stop)
@@ -17,6 +21,7 @@ const resolvers: Resolvers = {
 
 const server = new ApolloServer({ typeDefs, resolvers });
 
-server.listen().then(({ url }) => {
+const port = process.env.PORT || 4000;
+server.listen(port).then(({ url }) => {
     console.log(`🚀  Server ready at ${url}`);
 });
