@@ -3,6 +3,19 @@ import graphqlHTTP from 'express-graphql';
 import { GraphQLID, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString } from 'graphql';
 import data from './data';
 
+// Data access layer
+function getUserById(id) {
+    return data.users.find(user => user.id == id)
+}
+
+function getPostById(id) {
+    return data.posts.find(post => post.id == id)
+}
+
+function getPostsByAuthorId(authorId) {
+    return data.posts.filter(post => post.authorId == authorId);
+}
+
 // GraphQL related setup
 const UserType = new GraphQLObjectType({
     name: 'User',
@@ -88,18 +101,6 @@ const QueryType = new GraphQLObjectType({
 const schema = new GraphQLSchema({
     query: QueryType
 });
-
-function getUserById(id) {
-    return data.users.find(user => user.id == id)
-}
-
-function getPostById(id) {
-    return data.posts.find(post => post.id == id)
-}
-
-function getPostsByAuthorId(authorId) {
-    return data.posts.filter(post => post.authorId == authorId);
-}
 
 // Express related setup
 const route = '/graphql'
